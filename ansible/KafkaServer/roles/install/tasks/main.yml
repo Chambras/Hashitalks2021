@@ -1,0 +1,138 @@
+---
+- name: Install OpenJDK 1.8
+  yum:
+    name: java-1.8.0-openjdk-devel
+    state: latest
+
+- name: Create kafka group
+  group:
+    name: '{{ kafka_group }}'
+    state: present
+  tags:
+    - kafka_group
+
+- name: Create kafka user
+  user:
+    name: '{{ kafka_user }}'
+    group: '{{ kafka_group }}'
+    state: present
+    createhome: no
+  tags:
+    - kafka_user
+
+# some links:
+    # https://archive.apache.org/dist/kafka/2.3.0/kafka-2.3.0-src.tgz
+    # https://archive.apache.org/dist/kafka/2.3.0/kafka_2.12-2.3.0.tgz
+- name: Download Apache Kafka
+  get_url:
+    url: https://archive.apache.org/dist/kafka/{{ kafka_version }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz
+    # url: http://www-eu.apache.org/dist/kafka/{{ kafka_version }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz
+    dest: /home/kafkaAdmin
+  tags:
+    - kafka_download
+
+- name: Unpack Apache Kafka
+  unarchive:
+    src: /home/kafkaAdmin/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz
+    dest: '{{ kafka_root_dir }}'
+    copy: no
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+  tags:
+    - kafka_unpack
+
+
+- name: Create symlink to kafka installation directory
+  file:
+    src: '{{ kafka_root_dir }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}'
+    dest: '{{ kafka_dir }}'
+    state: link
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+  tags:
+    - kafka_dirs
+
+- name: Adding Kafka to user PATH
+  template:
+    src: bashrc.j2
+    dest: /home/{{ kafka_user }}/.bashrc
+
+- name: Get Solace Connector and its Dependencies
+  get_url:
+    url: https://solaceproducts.github.io/pubsubplus-connector-kafka-source/downloads/pubsubplus-connector-kafka-source-{{solace_version}}.zip
+    dest: /home/{{ kafka_user }}/
+
+- name: Unpack Solace Connector and its Dependencies
+  unarchive:
+    src: /home/{{ kafka_user }}/pubsubplus-connector-kafka-source-{{solace_version}}.zip
+    dest: /home/{{ kafka_user }}/
+    copy: no
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+
+- name: Find all *.jar files that need to copied
+  find:
+    paths: /home/{{ kafka_user }}/pubsubplus-connector-kafka-source-{{solace_version}}/lib
+    patterns: '*.jar'
+  register: jars_to_copy
+
+- name: Copy Solace Connector and its Dependencies
+  copy:
+    src: '{{ item.path}}'
+    dest: '{{ kafka_dir }}/libs/'
+    remote_src: yes
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+  with_items: '{{ jars_to_copy.files }}'
+
+- name: Configure Solace Connector in Stand Alone mode
+  template:
+    src: connect-standalone.properties.j2
+    dest: /opt/kafka/config/connect-standalone.properties
+
+- name: Configure TFMS Source Connector
+  template:
+    #src: solace_source.properties.j2
+    src: connect-solace-source.properties.j2
+    dest: /opt/kafka/config/connect-solace-tfms-source.properties
+    group: '{{ kafka_group }}'
+    owner: '{{ kafka_user }}'
+  vars:
+    connectorName: solaceConnectorTFMS
+    kafkaTopic: tfms
+
+- name: Template zookeeper systemd service file to /etc/systemd/system/zookeeper.service
+  template:
+    src: zookeeper.service.j2
+    dest: /etc/systemd/system/zookeeper.service
+  notify:
+    - Reload systemctl
+    - Restart zookeeper systemd
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version > '6') or ( ansible_distribution == "RedHat" and ansible_distribution_major_version >6)
+  tags:
+    - zookeeper_service
+
+- name: Template kafka systemd service file to /etc/systemd/system/kafka.service
+  template:
+    src: kafka.service.j2
+    dest: /etc/systemd/system/kafka.service
+  notify:
+    - Reload systemctl
+    - Restart kafka systemd
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version > '6') or ( ansible_distribution == "RedHat" and ansible_distribution_major_version >6)
+  tags:
+    - kafka_service
+
+- name: Install and start the zookeeper service
+  service:
+    name: '{{ item }}'
+    state: started
+    enabled: yes
+  with_items:
+    - zookeeper
+    - kafka
+  tags:
+    - zookeeper_and_kafka_service
+
+- name: Create TFMS topic
+  ansible.builtin.command: /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic tfms

@@ -1,0 +1,23 @@
+---
+# The Apache Kafka version to be downloaded and installed
+
+kafka_version: 2.3.0
+kafka_scala_version: 2.12
+
+# The kafka user and group to create files/dirs with and for running the kafka service
+
+kafka_user: kafkaAdmin
+kafka_group: kafkaAdmin
+
+kafka_root_dir: /opt
+kafka_dir: "{{ kafka_root_dir }}/kafka"
+
+solace_version: 2.0.2
+
+## TFMS Secrets!! Better to be set somewhere else for production
+SWIMEndpoint: <<GETENDFROMSWIM>>
+SWIMEndpointPort: 55443
+SWIMUserNaMe: <<GETUSERNAMEFROMSWIM>>
+Password: <<GETPASSWORDFROMSWIM>>
+SWIMVPN: <<GETVPNFROMSWIM>>
+SWIMQueue: <<GETQUEUEFROMSWIM>>

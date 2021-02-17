@@ -1,0 +1,16 @@
+---
+- name: Install Apache Kafka
+  hosts: all
+  # hosts: centos
+  become: yes
+
+  pre_tasks:
+  - debug:
+      msg: 'Beginning Apache Kafka server configuration. {{ ansible_distribution }}-{{ ansible_distribution_major_version}}'
+
+  roles:
+    - install
+
+  post_tasks:
+    - debug:
+        msg: 'Apache Kafka server has been configured.'

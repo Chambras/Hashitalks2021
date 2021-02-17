@@ -1,0 +1,49 @@
+{
+  "name": "Azure Terraform",
+  "dockerFile": "Dockerfile",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  // Set *default* container specific settings.json values on container create.
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "workbench.colorTheme": "GitHub Dark"
+  },
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": [
+    "vscoss.vscode-ansible",
+    "hashicorp.terraform",
+    "ms-vscode.azurecli",
+    "ms-azuretools.vscode-docker",
+    "bierner.emojisense",
+    "burtlo.inspec",
+    "chef-software.chef",
+    "CoenraadS.bracket-pair-colorizer",
+    "DotJoshJohnson.xml",
+    "eamodio.gitlens",
+    "GitHub.github-vscode-theme",
+    "ms-azuretools.vscode-azureterraform",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "ms-mssql.mssql",
+    "ms-python.python",
+    "ms-vscode.azure-account",
+    "rebornix.ruby",
+    "redhat.java",
+    "redhat.vscode-yaml",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "vscjava.vscode-java-debug",
+    "vscjava.vscode-java-dependency",
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-java-test",
+    "vscjava.vscode-maven",
+    "wingrunr21.vscode-ruby"
+  ],
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "terraform --version",
+  // Uncomment when using a ptrace-based debugger like C++, Go, and Rust
+  // "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+  // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
+  "remoteUser": "vscode"
+}
