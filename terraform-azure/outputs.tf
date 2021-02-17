@@ -17,7 +17,7 @@ output "sshAccess" {
   ssh ${var.vmUserName}@${azurerm_public_ip.kafkaPublicIP.ip_address} -i ~/.ssh/vm_ssh
   SSHCONFIG
 }
-/*
+
 output "adlsFyleSytemID" {
   value = azurerm_storage_data_lake_gen2_filesystem.ADLSFileSystemTFMS.id
 }
@@ -39,7 +39,7 @@ output "dataBricksSubnets" {
     subnet.name => subnet.address_prefix
   }
 }
-*/
+
 output "databricks_host" {
   value = "https://${azurerm_databricks_workspace.databricksWokspace.workspace_url}/"
 }
